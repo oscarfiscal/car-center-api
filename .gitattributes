@@ -1,0 +1,7 @@
+# Para scripts de Linux
+*.sh text eol=lf
+mvnw text eol=lf
+
+# Para scripts de Windows
+*.cmd text eol=crlf
+mvnw.cmd text eol=crlf
