@@ -6,14 +6,22 @@ import com.carcenter.car_center_api.maintenance.dtos.*;
 import com.carcenter.car_center_api.maintenance.entities.*;
 import com.carcenter.car_center_api.maintenance.repositories.*;
 import com.carcenter.car_center_api.maintenance.services.MaintenanceServiceInterface;
+import com.carcenter.car_center_api.maintenanceserviceitem.repositories.MaintenanceServiceItemRepository;
+import com.carcenter.car_center_api.maintenancesparepart.repositories.MaintenanceSparePartRepository;
+import com.carcenter.car_center_api.mechanic.dtos.MechanicResponse;
 import com.carcenter.car_center_api.mechanic.entities.Mechanic;
 import com.carcenter.car_center_api.mechanic.repositories.MechanicRepository;
+import com.carcenter.car_center_api.mechanic.services.MechanicServiceInterface;
 import com.carcenter.car_center_api.vehicle.entities.Vehicle;
 import com.carcenter.car_center_api.vehicle.repositories.VehicleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +32,9 @@ public class MaintenanceServiceImpl implements MaintenanceServiceInterface {
     private final ClientRepository clientRepo;
     private final VehicleRepository vehicleRepo;
     private final MechanicRepository mechanicRepo;
+    private final MaintenanceServiceItemRepository msiRepo;
+    private final MaintenanceSparePartRepository mspRepo;
+    private final MechanicServiceInterface mechanicService;
 
     private MaintenanceResponse toResponse(Maintenance m) {
         return MaintenanceResponse.builder()
@@ -98,4 +109,106 @@ public class MaintenanceServiceImpl implements MaintenanceServiceInterface {
         }
         maintenanceRepo.deleteById(id);
     }
+
+    @Override
+    public MaintenanceResponse assignMechanic(Long maintenanceId) {
+        Maintenance m = maintenanceRepo.findById(maintenanceId)
+                .orElseThrow(() -> new IllegalArgumentException("Maintenance not found"));
+        if (m.getStatus() != MaintenanceStatus.PENDING) {
+            throw new IllegalStateException("Can only assign mechanic to PENDING maintenance");
+        }
+        // obtenemos el top-ten y asignamos el primero
+        List<MechanicResponse> candidates = mechanicService.getTopTenAvailable();
+        if (candidates.isEmpty()) {
+            throw new IllegalStateException("No available mechanics");
+        }
+        // buscamos la entidad Mechanic por id
+        Long mechId = candidates.get(0).getId();
+        Mechanic mech = new Mechanic();
+        mech.setId(mechId); // asumimos que sólo necesitamos la referencia
+        m.setMechanic(mech);
+        m.setStatus(MaintenanceStatus.IN_PROGRESS);
+        m.setStartDate(LocalDate.now());
+        Maintenance updated = maintenanceRepo.save(m);
+        return toResponse(updated);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public MaintenanceFullResponse getFullDetails(Long maintenanceId) {
+        Maintenance m = maintenanceRepo.findById(maintenanceId)
+                .orElseThrow(() -> new IllegalArgumentException("Maintenance not found"));
+
+        // Cliente
+        Client c = m.getClient();
+        MaintenanceFullResponse.ClientInfo ci = new MaintenanceFullResponse.ClientInfo(
+                c.getId(),
+                c.getFirstName(), c.getSecondName(), c.getFirstLastName(), c.getSecondLastName(),
+                c.getDocumentType(), c.getDocument(),
+                c.getCellphone(), c.getAddress(), c.getEmail()
+        );
+
+        // Mecánico (puede ser null si aún no asignado)
+        MaintenanceFullResponse.MechanicInfo mi = null;
+        if (m.getMechanic() != null) {
+            Mechanic mech = m.getMechanic();
+            mi = new MaintenanceFullResponse.MechanicInfo(
+                    mech.getId(),
+                    mech.getFirstName(), mech.getSecondName(), mech.getFirstLastName(), mech.getSecondLastName(),
+                    mech.getDocumentType(), mech.getDocument(),
+                    mech.getCellphone(), mech.getAddress(), mech.getEmail(),
+                    mech.getStatus().name()
+            );
+        }
+
+        // Repuestos
+        List<MaintenanceFullResponse.SparePartItem> spareItems = mspRepo.findByMaintenanceId(m.getId())
+                .stream()
+                .map(sp -> {
+                    double line = sp.getQuantity() * sp.getSparePart().getUnitPrice();
+                    return new MaintenanceFullResponse.SparePartItem(
+                            sp.getId(),
+                            sp.getSparePart().getName(),
+                            sp.getQuantity(),
+                            sp.getSparePart().getUnitPrice(),
+                            line
+                    );
+                }).collect(Collectors.toList());
+
+        // Servicios
+        List<MaintenanceFullResponse.ServiceItem> serviceItems = msiRepo.findByMaintenanceId(m.getId())
+                .stream()
+                .map(si -> {
+                    double line = si.getEstimatedTime() * si.getService().getPrice();
+                    return new MaintenanceFullResponse.ServiceItem(
+                            si.getId(),
+                            si.getService().getName(),
+                            si.getEstimatedTime(),
+                            si.getService().getPrice(),
+                            line
+                    );
+                }).collect(Collectors.toList());
+
+        // Total
+        double totalCost = spareItems.stream().mapToDouble(MaintenanceFullResponse.SparePartItem::getLineTotal).sum()
+                + serviceItems.stream().mapToDouble(MaintenanceFullResponse.ServiceItem::getLineTotal).sum();
+
+        return MaintenanceFullResponse.builder()
+                .id(m.getId())
+                .description(m.getDescription())
+                .limitBudget(m.getLimitBudget())
+                .status(m.getStatus().name())
+                .hoursWorked(m.getHoursWorked())
+                .startDate(m.getStartDate())
+                .endDate(m.getEndDate())
+                .client(ci)
+                .mechanic(mi)
+                .spareParts(spareItems)
+                .serviceItems(serviceItems)
+                .totalCost(totalCost)
+                .build();
+    }
+
+
+
 }

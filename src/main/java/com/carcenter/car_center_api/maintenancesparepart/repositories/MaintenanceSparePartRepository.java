@@ -4,7 +4,10 @@ import com.carcenter.car_center_api.maintenancesparepart.entities.MaintenanceSpa
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface MaintenanceSparePartRepository extends JpaRepository<MaintenanceSparePart, Long> {
-
+    List<MaintenanceSparePart> findByMaintenanceId(Long maintenanceId);
+    List<MaintenanceSparePart> findBySparePartId(Long sparePartId);
 }
