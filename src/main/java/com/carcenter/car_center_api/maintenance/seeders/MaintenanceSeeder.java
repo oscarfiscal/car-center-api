@@ -51,7 +51,7 @@ public class MaintenanceSeeder implements CommandLineRunner {
             List<Vehicle> vehicles = vehicleRepository.findAll();
             List<Mechanic> mechanics = mechanicRepository.findAll();
 
-            List<Maintenance> maintenances = IntStream.range(0, 10)
+            List<Maintenance> maintenances = IntStream.range(0, 20)
                     .mapToObj(i -> {
                         Client client = clients.get(random.nextInt(clients.size()));
                         Vehicle vehicle = vehicles.stream()

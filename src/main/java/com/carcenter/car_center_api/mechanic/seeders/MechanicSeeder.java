@@ -28,7 +28,7 @@ public class MechanicSeeder implements CommandLineRunner {
             Faker faker = new Faker(new Locale("es"));
             Random random = new Random();
 
-            List<Mechanic> mechanics = IntStream.range(0, 10)
+            List<Mechanic> mechanics = IntStream.range(0, 15)
                     .mapToObj(i -> {
                         String documentType = random.nextBoolean() ? "CC" : "TI";
                         int document = 10000000 + random.nextInt(90000000);

@@ -97,8 +97,9 @@ public class MechanicServiceImpl implements MechanicServiceInterface {
     @Transactional(readOnly = true)
     public List<MechanicResponse> getTopTenAvailable() {
         LocalDate since = LocalDate.now().minusDays(30);
+        System.out.println("AQUI" + since);
         List<Mechanic> list = repo.findTopByStatusAndHoursSince(
-                MechanicStatus.FREE, since, PageRequest.of(0, 10)
+                MechanicStatus.AVAILABLE, since, PageRequest.of(0, 10)
         );
         return list.stream().map(this::toResponse).collect(Collectors.toList());
     }
