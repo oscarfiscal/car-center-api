@@ -5,10 +5,10 @@ import com.carcenter.car_center_api.client.repositories.ClientRepository;
 import com.carcenter.car_center_api.invoice.dtos.InvoiceCreateResponse;
 import com.carcenter.car_center_api.invoice.dtos.InvoiceCreateResponse.ClientInfo;
 import com.carcenter.car_center_api.invoice.dtos.InvoiceCreateResponse.InvoiceDetailInfo;
-import com.carcenter.car_center_api.invoice.entities.*;
-import com.carcenter.car_center_api.invoice.repositories.*;
+import com.carcenter.car_center_api.invoice.dtos.InvoiceCreateResponse.MechanicInfo;    // << Import añadido
+import com.carcenter.car_center_api.invoice.entities.Invoice;
+import com.carcenter.car_center_api.invoice.repositories.InvoiceRepository;
 import com.carcenter.car_center_api.invoice.services.InvoiceServiceInterface;
-import com.carcenter.car_center_api.invoicedetail.entities.InvoiceDetail;
 import com.carcenter.car_center_api.maintenance.entities.Maintenance;
 import com.carcenter.car_center_api.maintenance.entities.MaintenanceStatus;
 import com.carcenter.car_center_api.maintenance.repositories.MaintenanceRepository;
@@ -16,6 +16,7 @@ import com.carcenter.car_center_api.maintenanceserviceitem.entities.MaintenanceS
 import com.carcenter.car_center_api.maintenanceserviceitem.repositories.MaintenanceServiceItemRepository;
 import com.carcenter.car_center_api.maintenancesparepart.entities.MaintenanceSparePart;
 import com.carcenter.car_center_api.maintenancesparepart.repositories.MaintenanceSparePartRepository;
+import com.carcenter.car_center_api.invoicedetail.entities.InvoiceDetail;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,7 +47,7 @@ public class InvoiceServiceImpl implements InvoiceServiceInterface {
         Client client = clientRepo.findById(clientId)
                 .orElseThrow(() -> new IllegalArgumentException("Client not found"));
 
-        // Obtener todos los mantenimientos COMPLETED y no facturados para el cliente
+        // 1. Obtener todos los mantenimientos COMPLETED y no facturados para el cliente
         List<Maintenance> maintenancesToInvoice = maintenanceRepo.findAll().stream()
                 .filter(m -> m.getClient().getId().equals(clientId))
                 .filter(m -> m.getStatus() == MaintenanceStatus.COMPLETED && !m.isInvoiced())
@@ -86,12 +87,10 @@ public class InvoiceServiceImpl implements InvoiceServiceInterface {
                         .multiply(BigDecimal.valueOf(si.getEstimatedTime()));
                 servicesTotal = servicesTotal.add(laborCost);
             }
-            System.out.println("servicesTotal = " + servicesTotal);
             // Calcular descuento en mano de obra si repuestos > 3,000,000 COP
             BigDecimal serviceDiscount = sparePartsTotal.compareTo(SPARE_PARTS_DISCOUNT_THRESHOLD) > 0
                     ? servicesTotal.multiply(LABOR_DISCOUNT_RATE)
                     : BigDecimal.ZERO;
-            System.out.println("serviceDiscount = " + serviceDiscount);
 
             for (MaintenanceServiceItem si : serviceItems) {
                 BigDecimal laborCost = BigDecimal.valueOf(si.getService().getPrice())
@@ -99,7 +98,6 @@ public class InvoiceServiceImpl implements InvoiceServiceInterface {
                 BigDecimal discount = sparePartsTotal.compareTo(SPARE_PARTS_DISCOUNT_THRESHOLD) > 0
                         ? laborCost.multiply(LABOR_DISCOUNT_RATE)
                         : BigDecimal.ZERO;
-                System.out.println("discount = " + discount);
                 BigDecimal line = laborCost.subtract(discount);
                 InvoiceDetail detail = InvoiceDetail.builder()
                         .description("Service: " + si.getService().getName())
@@ -111,7 +109,7 @@ public class InvoiceServiceImpl implements InvoiceServiceInterface {
                 details.add(detail);
             }
 
-            // Validar que el total del mantenimiento no supere el presupuesto (si se definió)
+            // Validar presupuesto del mantenimiento
             BigDecimal maintenanceTotal = sparePartsTotal.add(servicesTotal).subtract(serviceDiscount);
             if (m.getLimitBudget() != null) {
                 BigDecimal maintenanceBudget = BigDecimal.valueOf(m.getLimitBudget());
@@ -120,14 +118,16 @@ public class InvoiceServiceImpl implements InvoiceServiceInterface {
                 }
             }
 
-            // Marcar el mantenimiento como facturado
+            // Marcar mantenimiento como facturado
             m.setInvoiced(true);
             invoiceSubtotal = invoiceSubtotal.add(maintenanceTotal);
         }
 
+        // 2. Calcular IVA y total
         BigDecimal tax = invoiceSubtotal.multiply(TAX_RATE);
         BigDecimal invoiceTotal = invoiceSubtotal.add(tax);
 
+        // 3. Construir y guardar la factura
         Invoice invoice = Invoice.builder()
                 .client(client)
                 .createdAt(LocalDateTime.now())
@@ -137,11 +137,10 @@ public class InvoiceServiceImpl implements InvoiceServiceInterface {
                 .total(invoiceTotal.doubleValue())
                 .build();
 
-        // Asignar la factura a cada detalle
         details.forEach(d -> d.setInvoice(invoice));
         invoiceRepo.save(invoice);
 
-        // Mapear detalles a DTOs
+        // 4. Mapear detalles a DTOs
         List<InvoiceDetailInfo> detailInfos = details.stream()
                 .map(d -> new InvoiceDetailInfo(
                         d.getDescription(),
@@ -152,6 +151,7 @@ public class InvoiceServiceImpl implements InvoiceServiceInterface {
                 ))
                 .collect(Collectors.toList());
 
+        // 5. Mapear datos de cliente
         ClientInfo ci = new ClientInfo(
                 client.getId(),
                 client.getDocumentType(),
@@ -165,10 +165,32 @@ public class InvoiceServiceImpl implements InvoiceServiceInterface {
                 client.getEmail()
         );
 
+        // ========recolectar datos de mecánicos ========
+        List<MechanicInfo> mechInfos = maintenancesToInvoice.stream()
+                .map(Maintenance::getMechanic)
+                .filter(Objects::nonNull)
+                .map(mech -> new MechanicInfo(
+                        mech.getId(),
+                        mech.getFirstName(),
+                        mech.getSecondName(),
+                        mech.getFirstLastName(),
+                        mech.getSecondLastName(),
+                        mech.getDocumentType(),
+                        mech.getDocument(),
+                        mech.getCellphone(),
+                        mech.getAddress(),
+                        mech.getEmail(),
+                        mech.getStatus().name()
+                ))
+                .distinct()
+                .collect(Collectors.toList());
+
+
         return InvoiceCreateResponse.builder()
                 .id(invoice.getId())
                 .createdAt(invoice.getCreatedAt())
                 .client(ci)
+                .mechanics(mechInfos)
                 .details(detailInfos)
                 .subtotal(invoice.getSubtotal())
                 .tax(invoice.getTax())

@@ -13,6 +13,7 @@ public class InvoiceCreateResponse {
     private Long id;
     private LocalDateTime createdAt;
     private ClientInfo client;
+    private List<MechanicInfo> mechanics;
     private List<InvoiceDetailInfo> details;
     private Double subtotal;
     private Double tax;
@@ -43,5 +44,23 @@ public class InvoiceCreateResponse {
         private Double unitPrice;
         private Double discount;
         private Double lineTotal;
+    }
+
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class MechanicInfo{
+        private Long id;
+        private String firstName;
+        private String secondName;
+        private String firstLastName;
+        private String secondLastName;
+        private String documentType;
+        private Integer document;
+        private String cellphone;
+        private String address;
+        private String email;
+        private String status;
+
     }
 }

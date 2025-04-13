@@ -37,4 +37,6 @@ public class InvoiceResponse {
         private Double discount;
         private Double lineTotal;
     }
+
+
 }
