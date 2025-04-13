@@ -1,5 +1,6 @@
 package com.carcenter.car_center_api.entities;
 
+import com.carcenter.car_center_api.vehicle.entities.Vehicle;
 import jakarta.persistence.*;
 import lombok.*;
 
