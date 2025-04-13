@@ -15,7 +15,7 @@ public class MaintenanceResponse {
     private String description;
     private Double limitBudget;
     private MaintenanceStatus status;
-    private Double hoursWorked;
+    private Integer hoursWorked;
     private LocalDate startDate;
     private LocalDate endDate;
     private Long clientId;

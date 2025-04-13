@@ -21,5 +21,5 @@ public class MaintenanceUpdateRequest {
 
     private Long mechanicId;
 
-    private Double hoursWorked;
+    private Integer hoursWorked;
 }

@@ -31,7 +31,7 @@ public class Maintenance {
     private MaintenanceStatus status;
 
     @Column(name = "hours_worked")
-    private Double hoursWorked;
+    private Integer hoursWorked;
 
     @Column(name = "start_date")
     private LocalDate startDate;
