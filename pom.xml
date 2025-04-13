@@ -79,7 +79,11 @@
 			<artifactId>javafaker</artifactId>
 			<version>1.0.2</version>
 		</dependency>
-
+		<dependency>
+			<groupId>com.twilio.sdk</groupId>
+			<artifactId>twilio</artifactId>
+			<version>10.7.2</version>
+		</dependency>
 	</dependencies>
 
 	<build>

@@ -50,4 +50,18 @@ public class MaintenanceController {
     public void delete(@PathVariable Long id) {
         service.delete(id);
     }
+
+    /** Asigna automáticamente un mecánico libre y pone status IN_PROGRESS */
+    @PostMapping("/{id}/assign-mechanic")
+    public ResponseEntity<MaintenanceResponse> assignMechanic(@PathVariable Long id) {
+        MaintenanceResponse resp = service.assignMechanic(id);
+        return ResponseEntity.ok(resp);
+    }
+
+    /** Obtiene todos los detalles (cliente, mecánico, repuestos, servicios, totales) */
+    @GetMapping("/{id}/full")
+    public ResponseEntity<MaintenanceFullResponse> getFullDetails(@PathVariable Long id) {
+        MaintenanceFullResponse full = service.getFullDetails(id);
+        return ResponseEntity.ok(full);
+    }
 }

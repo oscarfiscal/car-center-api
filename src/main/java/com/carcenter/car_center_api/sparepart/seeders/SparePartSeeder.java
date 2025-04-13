@@ -37,7 +37,7 @@ public class SparePartSeeder implements CommandLineRunner {
                             .name(partNames.get(i))
                             .inventoryQuantity(10 + random.nextInt(40))
                             .supplier(safeSubstring(faker.company().name(), 200))
-                            .unitPrice(100000.0 + random.nextDouble() * 900000.0) // $100.000 a $1.000.000
+                            .unitPrice(Math.round((100000.0 + random.nextDouble() * 900000.0) / 1000.0) * 1000.0) // $100.000 a $1.000.000
                             .build()
                     )
                     .collect(Collectors.toList());

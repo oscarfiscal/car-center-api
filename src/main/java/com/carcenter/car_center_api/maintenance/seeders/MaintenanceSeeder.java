@@ -63,7 +63,7 @@ public class MaintenanceSeeder implements CommandLineRunner {
                         if (vehicle == null) return null;
 
                         String description = faker.lorem().sentence(5);
-                        Double limitBudget = 500000.0 + random.nextDouble() * 4500000.0;
+                        Double limitBudget = Math.round((500000.0 + random.nextDouble() * 4500000.0) / 1000.0) * 1000.0;
                         MaintenanceStatus status = MaintenanceStatus.values()[random.nextInt(MaintenanceStatus.values().length)];
                         int hoursWorked = 1 + random.nextInt(10);
                         LocalDate startDate = LocalDate.now().minusDays(random.nextInt(15));
