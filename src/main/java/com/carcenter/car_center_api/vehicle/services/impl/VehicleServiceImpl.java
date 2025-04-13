@@ -3,16 +3,17 @@ package com.carcenter.car_center_api.vehicle.services.impl;
 import com.carcenter.car_center_api.client.entities.Client;
 import com.carcenter.car_center_api.client.repositories.ClientRepository;
 import com.carcenter.car_center_api.vehicle.dtos.*;
-import com.carcenter.car_center_api.vehicle.entities.*;
-import com.carcenter.car_center_api.vehicle.repositories.*;
+import com.carcenter.car_center_api.vehicle.entities.Vehicle;
+import com.carcenter.car_center_api.vehicle.mappers.VehicleMapper;
+import com.carcenter.car_center_api.vehicle.repositories.VehicleRepository;
 import com.carcenter.car_center_api.vehicle.services.VehicleServiceInterface;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.stream.Collectors;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -21,51 +22,34 @@ public class VehicleServiceImpl implements VehicleServiceInterface {
 
     private final VehicleRepository vehicleRepo;
     private final ClientRepository clientRepo;
-
-    private VehicleResponse toResponse(Vehicle v) {
-        return VehicleResponse.builder()
-                .id(v.getId())
-                .plate(v.getPlate())
-                .brand(v.getBrand())
-                .model(v.getModel())
-                .year(v.getYear())
-                .color(v.getColor())
-                .clientId(v.getClient().getId())
-                .build();
-    }
+    private final VehicleMapper vehicleMapper;
 
     @Override
     public VehicleResponse create(VehicleCreateRequest dto) {
         if (vehicleRepo.existsByPlate(dto.getPlate())) {
             throw new IllegalArgumentException("Plate already in use");
         }
+
         Client client = clientRepo.findById(dto.getClientId())
                 .orElseThrow(() -> new IllegalArgumentException("Client not found"));
 
-        Vehicle v = Vehicle.builder()
-                .plate(dto.getPlate())
-                .brand(dto.getBrand())
-                .model(dto.getModel())
-                .year(dto.getYear())
-                .color(dto.getColor())
-                .client(client)
-                .build();
-
-        return toResponse(vehicleRepo.save(v));
+        Vehicle vehicle = vehicleMapper.toEntity(dto, client);
+        return vehicleMapper.toResponse(vehicleRepo.save(vehicle));
     }
 
     @Override
     @Transactional(readOnly = true)
     public VehicleResponse getById(Long id) {
-        Vehicle v = vehicleRepo.findById(id)
+        Vehicle vehicle = vehicleRepo.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Vehicle not found"));
-        return toResponse(v);
+        return vehicleMapper.toResponse(vehicle);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Page<VehicleResponse> getAll(Pageable pageable) {
-        return vehicleRepo.findAll(pageable).map(this::toResponse);
+        return vehicleRepo.findAll(pageable)
+                .map(vehicleMapper::toResponse);
     }
 
     @Override
@@ -73,19 +57,17 @@ public class VehicleServiceImpl implements VehicleServiceInterface {
     public List<VehicleResponse> getByClient(Long clientId) {
         return vehicleRepo.findByClientId(clientId)
                 .stream()
-                .map(this::toResponse)
+                .map(vehicleMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
     @Override
     public VehicleResponse update(Long id, VehicleUpdateRequest dto) {
-        Vehicle v = vehicleRepo.findById(id)
+        Vehicle vehicle = vehicleRepo.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Vehicle not found"));
-        v.setBrand(dto.getBrand());
-        v.setModel(dto.getModel());
-        v.setYear(dto.getYear());
-        v.setColor(dto.getColor());
-        return toResponse(vehicleRepo.save(v));
+
+        vehicleMapper.updateVehicleFromDto(vehicle, dto);
+        return vehicleMapper.toResponse(vehicleRepo.save(vehicle));
     }
 
     @Override

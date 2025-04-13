@@ -1,5 +1,6 @@
 package com.carcenter.car_center_api.vehicle.entities;
 
+import com.carcenter.car_center_api.brand.entities.Brand;
 import com.carcenter.car_center_api.client.entities.Client;
 import jakarta.persistence.*;
 import lombok.*;
@@ -25,8 +26,9 @@ public class Vehicle {
     @Column(nullable = false, length = 10, unique = true)
     private String plate;
 
-    @Column(nullable = false, length = 50)
-    private String brand;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "brand_id", nullable = false)
+    private Brand brand;
 
     @Column(nullable = false, length = 50)
     private String model;

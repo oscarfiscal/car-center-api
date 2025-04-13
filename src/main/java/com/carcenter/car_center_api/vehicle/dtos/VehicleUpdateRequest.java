@@ -1,5 +1,6 @@
 package com.carcenter.car_center_api.vehicle.dtos;
 
+import com.carcenter.car_center_api.brand.entities.Brand;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
@@ -10,7 +11,7 @@ public class VehicleUpdateRequest {
 
     @NotBlank
     @Size(max = 50)
-    private String brand;
+    private Brand brand;
 
     @NotBlank
     @Size(max = 50)

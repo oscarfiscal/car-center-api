@@ -1,5 +1,7 @@
 package com.carcenter.car_center_api.vehicle.seeders;
 
+import com.carcenter.car_center_api.brand.entities.Brand;
+import com.carcenter.car_center_api.brand.repositories.BrandRepository;
 import com.carcenter.car_center_api.client.entities.Client;
 import com.carcenter.car_center_api.client.repositories.ClientRepository;
 import com.carcenter.car_center_api.vehicle.entities.Vehicle;
@@ -62,3 +64,4 @@ public class VehicleSeeder implements CommandLineRunner {
         return input.length() > maxLength ? input.substring(0, maxLength) : input;
     }
 }
+
