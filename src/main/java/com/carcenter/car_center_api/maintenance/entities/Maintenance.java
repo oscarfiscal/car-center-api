@@ -49,8 +49,11 @@ public class Maintenance {
     @JoinColumn(name = "vehicle_id", nullable = false)
     private Vehicle vehicle;
 
-    // Relación opcional con Mechanic (puede no asignarse al inicio)
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "mechanic_id")
     private Mechanic mechanic;
+
+    @Column(nullable = false)
+    private boolean invoiced = false;
 }
