@@ -128,7 +128,7 @@ public class MaintenanceSparePartServiceImpl implements MaintenanceSparePartServ
 
         System.out.println("spareSum = " + spareSum);
         BigDecimal serviceSum = msiRepo.findByMaintenanceId(maintenanceId).stream()
-                .map(si -> BigDecimal.valueOf(si.getService().getPrice())
+                .map(si -> BigDecimal.valueOf(si.getMechanicalService().getPrice())
                         .multiply(BigDecimal.valueOf(si.getEstimatedTime())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         System.out.println("serviceSum = " + serviceSum);

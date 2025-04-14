@@ -1,7 +1,7 @@
 package com.carcenter.car_center_api.maintenanceserviceitem.entities;
 
 import com.carcenter.car_center_api.maintenance.entities.Maintenance;
-import com.carcenter.car_center_api.service.entities.Service;
+import com.carcenter.car_center_api.mechanicalservice.entities.MechanicalService;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -22,7 +22,7 @@ public class MaintenanceServiceItem {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "service_id", nullable = false)
-    private Service service;
+    private MechanicalService mechanicalService;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "maintenance_id", nullable = false)

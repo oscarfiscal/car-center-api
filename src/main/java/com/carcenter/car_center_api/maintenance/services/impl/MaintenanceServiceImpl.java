@@ -189,12 +189,12 @@ public class MaintenanceServiceImpl implements MaintenanceServiceInterface {
         List<MaintenanceFullResponse.ServiceItem> serviceItems = msiRepo.findByMaintenanceId(m.getId())
                 .stream()
                 .map(si -> {
-                    double line = si.getEstimatedTime() * si.getService().getPrice();
+                    double line = si.getEstimatedTime() * si.getMechanicalService().getPrice();
                     return new MaintenanceFullResponse.ServiceItem(
                             si.getId(),
-                            si.getService().getName(),
+                            si.getMechanicalService().getName(),
                             si.getEstimatedTime(),
-                            si.getService().getPrice(),
+                            si.getMechanicalService().getPrice(),
                             line
                     );
                 }).collect(Collectors.toList());
