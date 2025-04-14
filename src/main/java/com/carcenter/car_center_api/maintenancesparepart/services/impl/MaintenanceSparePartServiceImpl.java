@@ -16,7 +16,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.text.NumberFormat;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 @Service
@@ -59,25 +61,34 @@ public class MaintenanceSparePartServiceImpl implements MaintenanceSparePartServ
 
         //Recalcular el total actual del mantenimiento (repuestos + servicios)
         BigDecimal newTotal = calculateMaintenanceTotal(m.getId());
+        NumberFormat nf = NumberFormat.getNumberInstance(new Locale("es", "CO"));
+        nf.setGroupingUsed(true);
+        nf.setMaximumFractionDigits(0);  // sin decimales
+        String formattedTotal = nf.format(newTotal);
+        String formattedBudget = nf.format(m.getLimitBudget());
+
+        System.out.println("NUEVO VALOR = " + formattedTotal);
 
         // Notificar al cliente que se agregó un repuesto
         String phone = m.getClient().getCellphone();
+        String clientName = m.getClient().getFirstName();
         notificationService.sendSms(
                 phone,
-                "Se agregó un repuesto al mantenimiento #" + m.getId()
-                        + ". Total actual: " + newTotal + " COP."
+                "Señor(a) " + clientName + ", se agregó un repuesto al mantenimiento #" + m.getId()
+                        + ". El total actual es de " + formattedTotal + " COP."
         );
-        System.out.println("phone = " + newTotal);
+        System.out.println("NUEVO PRECIO = " + formattedTotal);
 
         //Si supera el presupuesto definido, enviar alerta adicional
         if (m.getLimitBudget() != null) {
             BigDecimal budget = BigDecimal.valueOf(m.getLimitBudget());
             System.out.println("budget = " + budget);
             if (newTotal.compareTo(budget) > 0) {
+                System.out.println("ENVIANDO MENSAJE DE ALERTA");
                 notificationService.sendSms(
                         phone,
-                        "Alerta: el mantenimiento #" + m.getId()
-                                + " ha superado su presupuesto de " + m.getLimitBudget() + " COP."
+                        "Señor(a) " + clientName + ", alerta: el mantenimiento #" + m.getId()
+                                + " ha superado su presupuesto de " + formattedBudget + " COP."
                 );
             }
         }
@@ -108,16 +119,19 @@ public class MaintenanceSparePartServiceImpl implements MaintenanceSparePartServ
      * Suma el total de repuestos y servicios para un mantenimiento dado.
      */
     private BigDecimal calculateMaintenanceTotal(Long maintenanceId) {
-        // Total repuestos
+        // sumar repuestos
         BigDecimal spareSum = repo.findByMaintenanceId(maintenanceId).stream()
                 .map(sp -> BigDecimal.valueOf(sp.getSparePart().getUnitPrice())
                         .multiply(BigDecimal.valueOf(sp.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+        // sumar servicios
 
         System.out.println("spareSum = " + spareSum);
-
-
-
-        return spareSum.add(spareSum);
+        BigDecimal serviceSum = msiRepo.findByMaintenanceId(maintenanceId).stream()
+                .map(si -> BigDecimal.valueOf(si.getService().getPrice())
+                        .multiply(BigDecimal.valueOf(si.getEstimatedTime())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        System.out.println("serviceSum = " + serviceSum);
+        return spareSum.add(serviceSum);
     }
 }
