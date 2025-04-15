@@ -1,4 +1,4 @@
-package com.carcenter.car_center_api.service.dtos;
+package com.carcenter.car_center_api.mechanicalservice.dtos;
 
 import lombok.*;
 
@@ -6,9 +6,9 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ServiceResponse {
+public class MechanicalService {
 
-    private Long id;
+    private Integer id;
     private String name;
     private Double price;
 }

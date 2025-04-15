@@ -33,7 +33,7 @@ public class ClientCreateRequest {
     private String secondLastName;
 
     @NotBlank
-    @Size(max = 10)
+    @Size(max = 15)
     private String cellphone;
 
     @NotBlank

@@ -1,4 +1,4 @@
-package com.carcenter.car_center_api.service.entities;
+package com.carcenter.car_center_api.mechanicalservice.entities;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -9,7 +9,7 @@ import lombok.*;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class Service {
+public class MechanicalService {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
