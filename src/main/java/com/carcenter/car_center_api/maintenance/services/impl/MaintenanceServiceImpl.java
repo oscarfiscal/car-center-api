@@ -53,11 +53,20 @@ public class MaintenanceServiceImpl implements MaintenanceServiceInterface {
 
     @Override
     public MaintenanceResponse create(MaintenanceCreateRequest request) {
-        Client client = clientRepo.findById(request.getClientId())
-                .orElseThrow(() -> new IllegalArgumentException("Client not found"));
-        Vehicle vehicle = vehicleRepo.findById(request.getVehicleId())
-                .orElseThrow(() -> new IllegalArgumentException("Vehicle not found"));
-
+        // Buscar cliente por documento
+        Client client = clientRepo.findByDocument(request.getClientDocument())
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "Client with document '" + request.getClientDocument() + "' not found"
+                        )
+                );
+        // Buscar vehículo por placa
+        Vehicle vehicle = vehicleRepo.findByPlate(request.getVehiclePlate())
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "Vehicle with license plate '" + request.getVehiclePlate() + "'  not found"
+                        )
+                );
         Maintenance maintenance = Maintenance.builder()
                 .client(client)
                 .vehicle(vehicle)
@@ -66,7 +75,8 @@ public class MaintenanceServiceImpl implements MaintenanceServiceInterface {
                 .status(MaintenanceStatus.PENDING)
                 .build();
 
-        return toResponse(maintenanceRepo.save(maintenance));
+        Maintenance saved = maintenanceRepo.save(maintenance);
+        return toResponse(saved);
     }
 
     @Override
@@ -179,12 +189,12 @@ public class MaintenanceServiceImpl implements MaintenanceServiceInterface {
         List<MaintenanceFullResponse.ServiceItem> serviceItems = msiRepo.findByMaintenanceId(m.getId())
                 .stream()
                 .map(si -> {
-                    double line = si.getEstimatedTime() * si.getService().getPrice();
+                    double line = si.getEstimatedTime() * si.getMechanicalService().getPrice();
                     return new MaintenanceFullResponse.ServiceItem(
                             si.getId(),
-                            si.getService().getName(),
+                            si.getMechanicalService().getName(),
                             si.getEstimatedTime(),
-                            si.getService().getPrice(),
+                            si.getMechanicalService().getPrice(),
                             line
                     );
                 }).collect(Collectors.toList());

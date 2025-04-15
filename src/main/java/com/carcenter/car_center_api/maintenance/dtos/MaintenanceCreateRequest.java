@@ -9,15 +9,17 @@ import lombok.*;
 public class MaintenanceCreateRequest {
 
     @NotNull
-    private Long clientId;
+    private Integer clientDocument;
 
-    @NotNull
-    private Long vehicleId;
+    @NotBlank
+    @Size(max = 10)
+    private String vehiclePlate;
 
     @NotBlank
     @Size(max = 255)
     private String description;
 
     @NotNull
+    @Positive
     private Double limitBudget;
 }

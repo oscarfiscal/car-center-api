@@ -1,4 +1,4 @@
-package com.carcenter.car_center_api.client.dtos.client;
+package com.carcenter.car_center_api.client.dtos;
 
 import lombok.*;
 

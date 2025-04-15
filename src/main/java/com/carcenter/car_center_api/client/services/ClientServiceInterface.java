@@ -2,7 +2,9 @@ package com.carcenter.car_center_api.client.services;
 
 
 
-import com.carcenter.car_center_api.client.dtos.client.*;
+import com.carcenter.car_center_api.client.dtos.ClientCreateRequest;
+import com.carcenter.car_center_api.client.dtos.ClientResponse;
+import com.carcenter.car_center_api.client.dtos.ClientUpdateRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

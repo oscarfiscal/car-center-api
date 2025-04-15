@@ -83,7 +83,7 @@ public class InvoiceServiceImpl implements InvoiceServiceInterface {
             List<MaintenanceServiceItem> serviceItems = msiRepo.findByMaintenanceId(m.getId());
             BigDecimal servicesTotal = BigDecimal.ZERO;
             for (MaintenanceServiceItem si : serviceItems) {
-                BigDecimal laborCost = BigDecimal.valueOf(si.getService().getPrice())
+                BigDecimal laborCost = BigDecimal.valueOf(si.getMechanicalService().getPrice())
                         .multiply(BigDecimal.valueOf(si.getEstimatedTime()));
                 servicesTotal = servicesTotal.add(laborCost);
             }
@@ -93,16 +93,16 @@ public class InvoiceServiceImpl implements InvoiceServiceInterface {
                     : BigDecimal.ZERO;
 
             for (MaintenanceServiceItem si : serviceItems) {
-                BigDecimal laborCost = BigDecimal.valueOf(si.getService().getPrice())
+                BigDecimal laborCost = BigDecimal.valueOf(si.getMechanicalService().getPrice())
                         .multiply(BigDecimal.valueOf(si.getEstimatedTime()));
                 BigDecimal discount = sparePartsTotal.compareTo(SPARE_PARTS_DISCOUNT_THRESHOLD) > 0
                         ? laborCost.multiply(LABOR_DISCOUNT_RATE)
                         : BigDecimal.ZERO;
                 BigDecimal line = laborCost.subtract(discount);
                 InvoiceDetail detail = InvoiceDetail.builder()
-                        .description("Service: " + si.getService().getName())
+                        .description("Service: " + si.getMechanicalService().getName())
                         .quantity(si.getEstimatedTime())
-                        .unitPrice(si.getService().getPrice())
+                        .unitPrice(si.getMechanicalService().getPrice())
                         .discount(discount.doubleValue())
                         .lineTotal(line.doubleValue())
                         .build();

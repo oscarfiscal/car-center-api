@@ -1,4 +1,4 @@
-package com.carcenter.car_center_api.service.dtos;
+package com.carcenter.car_center_api.mechanicalservice.dtos;
 
 import jakarta.validation.constraints.*;
 import lombok.*;
@@ -6,7 +6,7 @@ import lombok.*;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ServiceCreateRequest {
+public class MechanicalServiceCreateRequest {
 
     @NotBlank
     @Size(max = 100)

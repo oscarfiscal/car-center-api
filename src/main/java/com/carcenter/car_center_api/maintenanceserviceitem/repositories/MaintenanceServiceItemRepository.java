@@ -9,5 +9,5 @@ import java.util.List;
 @Repository
 public interface MaintenanceServiceItemRepository extends JpaRepository<MaintenanceServiceItem, Long> {
     List<MaintenanceServiceItem> findByMaintenanceId(Long maintenanceId);
-    List<MaintenanceServiceItem> findByServiceId(Long serviceId);
+
 }

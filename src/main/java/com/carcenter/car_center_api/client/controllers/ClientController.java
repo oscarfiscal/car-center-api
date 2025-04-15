@@ -1,8 +1,12 @@
 package com.carcenter.car_center_api.client.controllers;
 
-import com.carcenter.car_center_api.client.dtos.client.*;
+import com.carcenter.car_center_api.client.dtos.ClientCreateRequest;
+import com.carcenter.car_center_api.client.dtos.ClientResponse;
+import com.carcenter.car_center_api.client.dtos.ClientUpdateRequest;
 import com.carcenter.car_center_api.client.services.ClientServiceInterface;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.*;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.*;
@@ -23,9 +27,12 @@ public class ClientController {
     private final ClientServiceInterface service;
 
     @GetMapping
+    @Operation(summary = "List paginated clients")
     public Page<ClientResponse> list(
+            @ParameterObject
             @PageableDefault(size = 20, sort = "id", direction = Sort.Direction.ASC)
-            Pageable pageable) {
+            Pageable pageable
+    ) {
         return service.getAll(pageable);
     }
 
