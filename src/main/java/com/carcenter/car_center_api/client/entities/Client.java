@@ -40,7 +40,7 @@ public class Client {
     @Column(name = "second_last_name", nullable = false, length = 30)
     private String secondLastName;
 
-    @Column(nullable = false, length = 10)
+    @Column(nullable = false, length = 15)
     private String cellphone;
 
     @Column(nullable = false, length = 20)

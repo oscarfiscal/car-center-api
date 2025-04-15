@@ -45,7 +45,7 @@
    ```bash
    https://github.com/oscarfiscal/car-center-api/tree/master
 
-2. **Clona el repositorio**  
+2. **Ajusta las credenciales de Twilio**  
    ```bash
    export TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
    export TWILIO_AUTH_TOKEN=your_auth_token
