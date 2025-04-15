@@ -2,6 +2,7 @@ package com.carcenter.car_center_api.maintenancesparepart.services.impl;
 
 import com.carcenter.car_center_api.maintenance.entities.Maintenance;
 import com.carcenter.car_center_api.maintenance.repositories.MaintenanceRepository;
+import com.carcenter.car_center_api.maintenance.services.MaintenanceCostServiceInterface;
 import com.carcenter.car_center_api.maintenancesparepart.dtos.MaintenanceSparePartCreateRequest;
 import com.carcenter.car_center_api.maintenancesparepart.dtos.MaintenanceSparePartResponse;
 import com.carcenter.car_center_api.maintenancesparepart.entities.MaintenanceSparePart;
@@ -31,6 +32,7 @@ public class MaintenanceSparePartServiceImpl implements MaintenanceSparePartServ
     private final MaintenanceRepository maintenanceRepo;
     private final MaintenanceServiceItemRepository msiRepo;
     private final NotificationService notificationService;
+    private final MaintenanceCostServiceInterface MaintenanceCostService;
 
     private MaintenanceSparePartResponse toResponse(MaintenanceSparePart msp) {
         return MaintenanceSparePartResponse.builder()
@@ -59,31 +61,24 @@ public class MaintenanceSparePartServiceImpl implements MaintenanceSparePartServ
                 .build();
         repo.save(msp);
 
-        //Recalcular el total actual del mantenimiento (repuestos + servicios)
-        BigDecimal newTotal = calculateMaintenanceTotal(m.getId());
-        NumberFormat nf = NumberFormat.getNumberInstance(new Locale("es", "CO"));
-        nf.setGroupingUsed(true);
-        nf.setMaximumFractionDigits(0);  // sin decimales
-        String formattedTotal = nf.format(newTotal);
-        String formattedBudget = nf.format(m.getLimitBudget());
-
-        System.out.println("NUEVO VALOR = " + formattedTotal);
-
         // Notificar al cliente que se agregó un repuesto
         String phone = m.getClient().getCellphone();
         String clientName = m.getClient().getFirstName();
+        BigDecimal total   = MaintenanceCostService.calculateTotal(m.getId());
+        String    fmtTotal = MaintenanceCostService.formatCOP(total);
+        String formattedBudget = MaintenanceCostService.formatCOP(BigDecimal.valueOf(m.getLimitBudget()));
         notificationService.sendSms(
                 phone,
                 "Señor(a) " + clientName + ", se agregó un repuesto al mantenimiento #" + m.getId()
-                        + ". El total actual es de " + formattedTotal + " COP."
+                        + ". El total actual es de " + fmtTotal + " COP."
         );
-        System.out.println("NUEVO PRECIO = " + formattedTotal);
+        System.out.println("NUEVO PRECIO = " + fmtTotal);
 
         //Si supera el presupuesto definido, enviar alerta adicional
         if (m.getLimitBudget() != null) {
             BigDecimal budget = BigDecimal.valueOf(m.getLimitBudget());
             System.out.println("budget = " + budget);
-            if (newTotal.compareTo(budget) > 0) {
+            if (total.compareTo(budget) > 0) {
                 System.out.println("ENVIANDO MENSAJE DE ALERTA");
                 notificationService.sendSms(
                         phone,
@@ -115,23 +110,4 @@ public class MaintenanceSparePartServiceImpl implements MaintenanceSparePartServ
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Suma el total de repuestos y servicios para un mantenimiento dado.
-     */
-    private BigDecimal calculateMaintenanceTotal(Long maintenanceId) {
-        // sumar repuestos
-        BigDecimal spareSum = repo.findByMaintenanceId(maintenanceId).stream()
-                .map(sp -> BigDecimal.valueOf(sp.getSparePart().getUnitPrice())
-                        .multiply(BigDecimal.valueOf(sp.getQuantity())))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        // sumar servicios
-
-        System.out.println("spareSum = " + spareSum);
-        BigDecimal serviceSum = msiRepo.findByMaintenanceId(maintenanceId).stream()
-                .map(si -> BigDecimal.valueOf(si.getMechanicalService().getPrice())
-                        .multiply(BigDecimal.valueOf(si.getEstimatedTime())))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        System.out.println("serviceSum = " + serviceSum);
-        return spareSum.add(serviceSum);
-    }
 }
