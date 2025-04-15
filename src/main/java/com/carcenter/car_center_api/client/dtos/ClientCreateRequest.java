@@ -1,4 +1,4 @@
-package com.carcenter.car_center_api.client.dtos.client;
+package com.carcenter.car_center_api.client.dtos;
 
 import jakarta.validation.constraints.*;
 
@@ -7,7 +7,14 @@ import lombok.*;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ClientUpdateRequest {
+public class ClientCreateRequest {
+
+    @NotBlank
+    @Size(max = 2)
+    private String documentType;
+
+    @NotNull
+    private Integer document;
 
     @NotBlank
     @Size(max = 30)
@@ -26,15 +33,15 @@ public class ClientUpdateRequest {
     private String secondLastName;
 
     @NotBlank
-    @Size(max = 10)
+    @Size(max = 15)
     private String cellphone;
 
     @NotBlank
-    @Size(max = 20)
+    @Size(max = 30)
     private String address;
 
+    @NotBlank
     @Email
     @Size(max = 100)
     private String email;
 }
-

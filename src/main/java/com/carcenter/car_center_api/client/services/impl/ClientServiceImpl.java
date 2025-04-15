@@ -1,7 +1,11 @@
 package com.carcenter.car_center_api.client.services.impl;
 
-import com.carcenter.car_center_api.client.dtos.client.*;
+import com.carcenter.car_center_api.client.dtos.ClientCreateRequest;
+import com.carcenter.car_center_api.client.dtos.ClientResponse;
+import com.carcenter.car_center_api.client.dtos.ClientUpdateRequest;
 import com.carcenter.car_center_api.client.entities.Client;
+import com.carcenter.car_center_api.client.exceptions.ClientAlreadyExistsException;
+import com.carcenter.car_center_api.client.exceptions.ClientNotFoundException;
 import com.carcenter.car_center_api.client.mappers.ClientMapper;
 import com.carcenter.car_center_api.client.repositories.ClientRepository;
 import com.carcenter.car_center_api.client.services.ClientServiceInterface;
@@ -15,48 +19,66 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class ClientServiceImpl implements ClientServiceInterface {
 
-    private final ClientRepository repo;
+    private static final String CLIENT_NOT_FOUND_MESSAGE = "Client not found with ID: ";
+    private static final String CLIENT_ALREADY_EXISTS_MESSAGE = "A client already exists with document type: %s and number: %s";
+
+    private final ClientRepository clientRepository;
     private final ClientMapper clientMapper;
 
     @Override
-    public ClientResponse create(ClientCreateRequest dto) {
-        if (repo.existsByDocumentTypeAndDocument(dto.getDocumentType(), dto.getDocument())) {
-            throw new IllegalArgumentException("Client already exists with that document");
+    public ClientResponse create(ClientCreateRequest createRequest) {
+
+
+        if (clientRepository.existsByDocumentTypeAndDocument(createRequest.getDocumentType(), createRequest.getDocument())) {
+            String errorMessage = String.format(CLIENT_ALREADY_EXISTS_MESSAGE,
+                    createRequest.getDocumentType(),
+                    createRequest.getDocument());
+            throw new ClientAlreadyExistsException(errorMessage);
         }
 
-        Client client = clientMapper.toEntity(dto);
-        return clientMapper.toResponse(repo.save(client));
+        Client client = clientMapper.toEntity(createRequest);
+        Client savedClient = clientRepository.save(client);
+
+        return clientMapper.toResponse(savedClient);
     }
 
     @Override
     @Transactional(readOnly = true)
     public ClientResponse getById(Long id) {
-        Client client = repo.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Client not found"));
+        Client client = clientRepository.findById(id)
+                .orElseThrow(() -> {
+                    return new ClientNotFoundException(CLIENT_NOT_FOUND_MESSAGE + id);
+                });
         return clientMapper.toResponse(client);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Page<ClientResponse> getAll(Pageable pageable) {
-        return repo.findAll(pageable)
+        return clientRepository.findAll(pageable)
                 .map(clientMapper::toResponse);
     }
 
     @Override
-    public ClientResponse update(Long id, ClientUpdateRequest dto) {
-        Client client = repo.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Client not found"));
+    public ClientResponse update(Long id, ClientUpdateRequest updateRequest) {
 
-        clientMapper.updateEntity(client, dto);
-        return clientMapper.toResponse(repo.save(client));
+        Client client = clientRepository.findById(id)
+                .orElseThrow(() -> {
+                    return new ClientNotFoundException(CLIENT_NOT_FOUND_MESSAGE + id);
+                });
+
+        clientMapper.updateEntity(client, updateRequest);
+        Client updatedClient = clientRepository.save(client);
+
+        return clientMapper.toResponse(updatedClient);
     }
 
     @Override
     public void delete(Long id) {
-        if (!repo.existsById(id)) {
-            throw new IllegalArgumentException("Client not found");
+        if (!clientRepository.existsById(id)) {
+            throw new ClientNotFoundException(CLIENT_NOT_FOUND_MESSAGE + id);
         }
-        repo.deleteById(id);
+        clientRepository.deleteById(id);
+
     }
 }
