@@ -19,8 +19,10 @@ public class PhotoController {
 
     private final PhotoServiceInterface service;
 
-    @PostMapping
-    public ResponseEntity<PhotoResponse> create(@Valid @RequestBody PhotoCreateRequest dto) {
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<PhotoResponse> create(
+            @ModelAttribute @Valid PhotoCreateRequest dto
+    ) {
         PhotoResponse created = service.create(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
