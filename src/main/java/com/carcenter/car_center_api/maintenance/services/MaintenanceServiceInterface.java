@@ -15,6 +15,8 @@ public interface MaintenanceServiceInterface {
     MaintenanceResponse update(Long id, MaintenanceUpdateRequest request);
 
     void delete(Long id);
+
     MaintenanceResponse assignMechanic(Long maintenanceId);
+
     MaintenanceFullResponse getFullDetails(Long maintenanceId);
 }

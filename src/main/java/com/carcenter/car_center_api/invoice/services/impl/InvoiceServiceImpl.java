@@ -144,7 +144,7 @@ public class InvoiceServiceImpl implements InvoiceServiceInterface {
 
     private void validateBudget(Maintenance maintenance, BigDecimal maintenanceTotal) {
         if (maintenance.getLimitBudget() != null) {
-            BigDecimal budget = BigDecimal.valueOf(maintenance.getLimitBudget());
+            BigDecimal budget = maintenance.getLimitBudget();
             if (maintenanceTotal.compareTo(budget) > 0) {
                 throw new IllegalArgumentException("Maintenance ID " + maintenance.getId() + " exceeds budget limit");
             }
