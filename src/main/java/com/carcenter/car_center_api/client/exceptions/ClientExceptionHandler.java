@@ -1,7 +1,5 @@
 package com.carcenter.car_center_api.client.exceptions;
 
-import com.carcenter.car_center_api.client.exceptions.ClientAlreadyExistsException;
-import com.carcenter.car_center_api.client.exceptions.ClientNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;

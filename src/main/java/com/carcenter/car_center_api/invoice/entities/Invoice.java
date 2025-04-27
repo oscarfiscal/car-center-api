@@ -5,12 +5,16 @@ import com.carcenter.car_center_api.invoicedetail.entities.InvoiceDetail;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
 @Table(name = "invoices")
-@Data @Builder @NoArgsConstructor @AllArgsConstructor
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Invoice {
 
     @Id
@@ -27,12 +31,12 @@ public class Invoice {
     @OneToMany(mappedBy = "invoice", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<InvoiceDetail> details;
 
-    @Column(nullable = false)
-    private Double subtotal;
+    @Column(nullable = false, precision = 15, scale = 2)
+    private BigDecimal subtotal;
 
-    @Column(nullable = false)
-    private Double tax;      // IVA 19%
+    @Column(nullable = false, precision = 15, scale = 2)
+    private BigDecimal tax;  // IVA 19%
 
-    @Column(nullable = false)
-    private Double total;
+    @Column(nullable = false, precision = 15, scale = 2)
+    private BigDecimal total;
 }

@@ -1,21 +1,29 @@
 package com.carcenter.car_center_api.invoice.dtos;
 
 import lombok.*;
+
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Data @Builder @NoArgsConstructor @AllArgsConstructor
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class InvoiceResponse {
 
     private Long id;
     private LocalDateTime createdAt;
     private ClientInfo client;
     private List<DetailInfo> details;
-    private Double subtotal;
-    private Double tax;
-    private Double total;
+    private BigDecimal subtotal;
+    private BigDecimal tax;
+    private BigDecimal total;
 
-    @Data @AllArgsConstructor @NoArgsConstructor
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class ClientInfo {
         private Long id;
         private String documentType;
@@ -29,14 +37,15 @@ public class InvoiceResponse {
         private String email;
     }
 
-    @Data @AllArgsConstructor @NoArgsConstructor
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class DetailInfo {
         private String description;
         private Integer quantity;
-        private Double unitPrice;
-        private Double discount;
-        private Double lineTotal;
+        private BigDecimal unitPrice;
+        private BigDecimal discount;
+        private BigDecimal lineTotal;
     }
-
-
 }
