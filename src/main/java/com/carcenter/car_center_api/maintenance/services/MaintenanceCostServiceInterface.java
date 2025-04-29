@@ -5,5 +5,5 @@ import java.math.BigDecimal;
 public interface MaintenanceCostServiceInterface {
 
     BigDecimal calculateTotal(Long maintenanceId);
-    String formatCOP(BigDecimal amount);
+    //String formatCOP(BigDecimal amount);
 }

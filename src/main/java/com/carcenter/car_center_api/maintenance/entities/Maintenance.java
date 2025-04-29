@@ -6,6 +6,7 @@ import com.carcenter.car_center_api.vehicle.entities.Vehicle;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
@@ -23,8 +24,8 @@ public class Maintenance {
     @Column(nullable = false, length = 255)
     private String description;
 
-    @Column(name = "limit_budget", nullable = false)
-    private Double limitBudget;
+    @Column(name = "limit_budget", nullable = false, precision = 15, scale = 2)
+    private BigDecimal limitBudget;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
@@ -39,16 +40,13 @@ public class Maintenance {
     @Column(name = "end_date")
     private LocalDate endDate;
 
-    // Relación con Client
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "client_id", nullable = false)
     private Client client;
 
-    // Relación con Vehicle
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "vehicle_id", nullable = false)
     private Vehicle vehicle;
-
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "mechanic_id")
