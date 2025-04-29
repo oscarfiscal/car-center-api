@@ -1,9 +1,15 @@
 package com.carcenter.car_center_api.vehicle.services.impl;
 
+import com.carcenter.car_center_api.brand.entities.Brand;
+import com.carcenter.car_center_api.brand.exceptions.BrandNotFoundException;
+import com.carcenter.car_center_api.brand.repositories.BrandRepository;
 import com.carcenter.car_center_api.client.entities.Client;
+import com.carcenter.car_center_api.client.exceptions.ClientNotFoundException;
 import com.carcenter.car_center_api.client.repositories.ClientRepository;
 import com.carcenter.car_center_api.vehicle.dtos.*;
 import com.carcenter.car_center_api.vehicle.entities.Vehicle;
+import com.carcenter.car_center_api.vehicle.exceptions.PlateAlreadyExistsException;
+import com.carcenter.car_center_api.vehicle.exceptions.VehicleNotFoundException;
 import com.carcenter.car_center_api.vehicle.mappers.VehicleMapper;
 import com.carcenter.car_center_api.vehicle.repositories.VehicleRepository;
 import com.carcenter.car_center_api.vehicle.services.VehicleServiceInterface;
@@ -23,19 +29,25 @@ public class VehicleServiceImpl implements VehicleServiceInterface {
     private final VehicleRepository vehicleRepo;
     private final ClientRepository clientRepo;
     private final VehicleMapper vehicleMapper;
+    private final BrandRepository brandRepo;
 
     @Override
     public VehicleResponse create(VehicleCreateRequest dto) {
         if (vehicleRepo.existsByPlate(dto.getPlate())) {
-            throw new IllegalArgumentException("Plate already in use");
+            throw new PlateAlreadyExistsException("Plate already in use: " + dto.getPlate());
         }
 
-        Client client = clientRepo.findById(dto.getClientId())
-                .orElseThrow(() -> new IllegalArgumentException("Client not found"));
+        Client client = clientRepo.findByDocument(dto.getClientDocument())
+                .orElseThrow(() -> new ClientNotFoundException("Client not found with document: " + dto.getClientDocument()));
 
-        Vehicle vehicle = vehicleMapper.toEntity(dto, client);
+
+        Brand brand = brandRepo.findById(dto.getBrandId())
+                .orElseThrow(() -> new BrandNotFoundException("Brand not found with ID: " + dto.getBrandId()));
+
+        Vehicle vehicle = vehicleMapper.toEntity(dto, brand, client);
         return vehicleMapper.toResponse(vehicleRepo.save(vehicle));
     }
+
 
     @Override
     @Transactional(readOnly = true)
@@ -64,11 +76,17 @@ public class VehicleServiceImpl implements VehicleServiceInterface {
     @Override
     public VehicleResponse update(Long id, VehicleUpdateRequest dto) {
         Vehicle vehicle = vehicleRepo.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Vehicle not found"));
+                .orElseThrow(() -> new VehicleNotFoundException("Vehicle not found with ID: " + id));
 
-        vehicleMapper.updateVehicleFromDto(vehicle, dto);
-        return vehicleMapper.toResponse(vehicleRepo.save(vehicle));
+        Brand brand = brandRepo.findById(dto.getBrandId())
+                .orElseThrow(() -> new BrandNotFoundException("Brand not found with ID: " + dto.getBrandId()));
+
+        vehicleMapper.updateVehicleFromDto(vehicle, dto, brand);
+
+        Vehicle updated = vehicleRepo.save(vehicle);
+        return vehicleMapper.toResponse(updated);
     }
+
 
     @Override
     public void delete(Long id) {
