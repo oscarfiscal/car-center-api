@@ -17,32 +17,21 @@ public class MaintenanceCostServiceImpl implements MaintenanceCostServiceInterfa
     private final MaintenanceSparePartRepository mspRepo;
     private final MaintenanceServiceItemRepository msiRepo;
 
-    private final NumberFormat formatter = createFormatter();
 
-    private NumberFormat createFormatter() {
-        NumberFormat nf = NumberFormat.getNumberInstance(new Locale("es", "CO"));
-        nf.setGroupingUsed(true);
-        nf.setMaximumFractionDigits(0);
-        return nf;
-    }
 
     @Override
     public BigDecimal calculateTotal(Long maintenanceId) {
-        BigDecimal spareSum = mspRepo.findByMaintenanceId(maintenanceId).stream()
+        BigDecimal sparePartsTotal = mspRepo.findByMaintenanceId(maintenanceId).stream()
                 .map(sp -> BigDecimal.valueOf(sp.getSparePart().getUnitPrice())
                         .multiply(BigDecimal.valueOf(sp.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        BigDecimal serviceSum = msiRepo.findByMaintenanceId(maintenanceId).stream()
+        BigDecimal serviceItemsTotal = msiRepo.findByMaintenanceId(maintenanceId).stream()
                 .map(si -> BigDecimal.valueOf(si.getMechanicalService().getPrice())
                         .multiply(BigDecimal.valueOf(si.getEstimatedTime())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        return spareSum.add(serviceSum);
+        return sparePartsTotal.add(serviceItemsTotal);
     }
 
-    @Override
-    public String formatCOP(BigDecimal amount) {
-        return formatter.format(amount);
-    }
 }

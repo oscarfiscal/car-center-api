@@ -2,20 +2,20 @@ package com.carcenter.car_center_api.config;
 
 import com.twilio.Twilio;
 import jakarta.annotation.PostConstruct;
-import org.springframework.beans.factory.annotation.Value;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
+@RequiredArgsConstructor
 public class TwilioConfig {
 
-    @Value("${twilio.account-sid}")
-    private String accountSid;
-
-    @Value("${twilio.auth-token}")
-    private String authToken;
+    private final TwilioProperties twilioProperties;
 
     @PostConstruct
-    public void initTwilio() {
-        Twilio.init(accountSid, authToken);
+    public void init() {
+        Twilio.init(
+                twilioProperties.getAccountSid(),
+                twilioProperties.getAuthToken()
+        );
     }
 }

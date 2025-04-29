@@ -13,6 +13,7 @@ import com.github.javafaker.Faker;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Locale;
@@ -59,17 +60,19 @@ public class MaintenanceSeeder implements CommandLineRunner {
                                 .findAny()
                                 .orElse(null);
 
-                        // Si no hay vehículo asociado al cliente, se omite este mantenimiento
                         if (vehicle == null) return null;
 
                         String description = faker.lorem().sentence(5);
-                        Double limitBudget = Math.round((500000.0 + random.nextDouble() * 4500000.0) / 1000.0) * 1000.0;
+
+                        BigDecimal limitBudget = BigDecimal.valueOf(
+                                Math.round((500000.0 + random.nextDouble() * 4500000.0) / 1000.0) * 1000.0
+                        );
+
                         MaintenanceStatus status = MaintenanceStatus.values()[random.nextInt(MaintenanceStatus.values().length)];
                         int hoursWorked = 1 + random.nextInt(10);
                         LocalDate startDate = LocalDate.now().minusDays(random.nextInt(15));
                         LocalDate endDate = startDate.plusDays(random.nextInt(10));
 
-                        // A veces no se asigna un mecánico
                         Mechanic mechanic = (random.nextBoolean() && !mechanics.isEmpty())
                                 ? mechanics.get(random.nextInt(mechanics.size()))
                                 : null;
@@ -90,7 +93,7 @@ public class MaintenanceSeeder implements CommandLineRunner {
                     .collect(Collectors.toList());
 
             maintenanceRepository.saveAll(maintenances);
-            System.out.println("✅ Mantenimientos generados exitosamente.");
+            System.out.println("✅ 20 maintenances generated successfully.");
         }
     }
 }
