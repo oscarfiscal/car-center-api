@@ -20,7 +20,7 @@ public class MaintenanceResponse {
     @Schema(description = "Short description of the maintenance", example = "Oil change and brake inspection")
     private String description;
 
-    @Schema(description = "Maximum budget allowed for the maintenance (COP)", example = "2500000")
+    @Schema(description = "Maximum budget allowed for the maintenance", example = "2500000")
     private BigDecimal limitBudget;
 
     @Schema(description = "Current status of the maintenance", example = "IN_PROGRESS")

@@ -29,6 +29,6 @@ public class MaintenanceCreateRequest {
 
     @NotNull
     @Positive
-    @Schema(description = "Maximum budget allowed for the maintenance (COP)", example = "2500000")
+    @Schema(description = "Maximum budget allowed for the maintenance", example = "2500000")
     private BigDecimal limitBudget;
 }

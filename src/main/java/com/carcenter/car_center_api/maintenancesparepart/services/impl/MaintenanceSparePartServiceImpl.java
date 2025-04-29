@@ -65,25 +65,25 @@ public class MaintenanceSparePartServiceImpl implements MaintenanceSparePartServ
         String phone = m.getClient().getCellphone();
         String clientName = m.getClient().getFirstName();
         BigDecimal total   = MaintenanceCostService.calculateTotal(m.getId());
-        String    fmtTotal = MaintenanceCostService.formatCOP(total);
-        String formattedBudget = MaintenanceCostService.formatCOP(BigDecimal.valueOf(m.getLimitBudget()));
+        //String    fmtTotal = MaintenanceCostService.formatCOP(total);
+        //String formattedBudget = MaintenanceCostService.formatCOP(BigDecimal.valueOf(m.getLimitBudget()));
         notificationService.sendSms(
                 phone,
                 "Señor(a) " + clientName + ", se agregó un repuesto al mantenimiento #" + m.getId()
-                        + ". El total actual es de " + fmtTotal + " COP."
+                        + ". El total actual es de " + total + " COP."
         );
-        System.out.println("NUEVO PRECIO = " + fmtTotal);
+        System.out.println("NUEVO PRECIO = " + total);
 
         //Si supera el presupuesto definido, enviar alerta adicional
         if (m.getLimitBudget() != null) {
-            BigDecimal budget = BigDecimal.valueOf(m.getLimitBudget());
+            BigDecimal budget = m.getLimitBudget();
             System.out.println("budget = " + budget);
             if (total.compareTo(budget) > 0) {
                 System.out.println("ENVIANDO MENSAJE DE ALERTA");
                 notificationService.sendSms(
                         phone,
                         "Señor(a) " + clientName + ", alerta: el mantenimiento #" + m.getId()
-                                + " ha superado su presupuesto de " + formattedBudget + " COP."
+                                + " ha superado su presupuesto de " + m.getLimitBudget() + " COP."
                 );
             }
         }

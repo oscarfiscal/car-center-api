@@ -6,6 +6,8 @@ import com.carcenter.car_center_api.maintenance.services.MaintenanceCostServiceI
 import com.carcenter.car_center_api.maintenanceserviceitem.dtos.MaintenanceServiceItemCreateRequest;
 import com.carcenter.car_center_api.maintenanceserviceitem.dtos.MaintenanceServiceItemResponse;
 import com.carcenter.car_center_api.maintenanceserviceitem.entities.MaintenanceServiceItem;
+import com.carcenter.car_center_api.maintenanceserviceitem.exceptions.MaintenanceServiceItemNotFoundException;
+import com.carcenter.car_center_api.maintenanceserviceitem.mappers.MaintenanceServiceItemMapper;
 import com.carcenter.car_center_api.maintenanceserviceitem.repositories.MaintenanceServiceItemRepository;
 import com.carcenter.car_center_api.maintenanceserviceitem.services.MaintenanceServiceItemServiceInterface;
 import com.carcenter.car_center_api.mechanicalservice.entities.MechanicalService;
@@ -27,14 +29,15 @@ public class MaintenanceServiceItemServiceImpl implements MaintenanceServiceItem
     private final MaintenanceRepository maintenanceRepo;
     private final NotificationService notificationService;
     private final MaintenanceCostServiceInterface maintenanceCostService;
+    private final MaintenanceServiceItemMapper mapper;
 
     @Override
     public MaintenanceServiceItemResponse create(MaintenanceServiceItemCreateRequest dto) {
         MechanicalService service = serviceRepo.findById(dto.getServiceId())
-                .orElseThrow(() -> new IllegalArgumentException("Service not found"));
+                .orElseThrow(() -> new MaintenanceServiceItemNotFoundException("Mechanical service not found with ID: " + dto.getServiceId()));
 
         Maintenance maintenance = maintenanceRepo.findById(dto.getMaintenanceId())
-                .orElseThrow(() -> new IllegalArgumentException("Maintenance not found"));
+                .orElseThrow(() -> new MaintenanceServiceItemNotFoundException("Maintenance not found with ID: " + dto.getMaintenanceId()));
 
         MaintenanceServiceItem serviceItem = MaintenanceServiceItem.builder()
                 .mechanicalService(service)
@@ -44,17 +47,15 @@ public class MaintenanceServiceItemServiceImpl implements MaintenanceServiceItem
 
         MaintenanceServiceItem saved = repo.save(serviceItem);
 
-        // --- Notificaciones ---
-        sendNotifications(maintenance);
+        sendNotificationIfNeeded(maintenance);
 
-        return toResponse(saved);
+        return mapper.toResponse(saved);
     }
 
-    private void sendNotifications(Maintenance maintenance) {
+    private void sendNotificationIfNeeded(Maintenance maintenance) {
         String clientPhone = maintenance.getClient().getCellphone();
         String clientName = maintenance.getClient().getFirstName();
         BigDecimal totalCost = maintenanceCostService.calculateTotal(maintenance.getId());
-
 
         notificationService.sendSms(
                 clientPhone,
@@ -78,16 +79,7 @@ public class MaintenanceServiceItemServiceImpl implements MaintenanceServiceItem
     @Transactional(readOnly = true)
     public MaintenanceServiceItemResponse getById(Long id) {
         MaintenanceServiceItem serviceItem = repo.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Item not found"));
-        return toResponse(serviceItem);
-    }
-
-    private MaintenanceServiceItemResponse toResponse(MaintenanceServiceItem serviceItem) {
-        return MaintenanceServiceItemResponse.builder()
-                .id(serviceItem.getId())
-                .estimatedTime(serviceItem.getEstimatedTime())
-                .serviceId(serviceItem.getMechanicalService().getId())
-                .maintenanceId(serviceItem.getMaintenance().getId())
-                .build();
+                .orElseThrow(() -> new MaintenanceServiceItemNotFoundException("Maintenance service item not found with ID: " + id));
+        return mapper.toResponse(serviceItem);
     }
 }
